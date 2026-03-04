@@ -2,86 +2,142 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI会议原型生成器 - PM专属神器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI会议原型生成器 </title>
     <!-- 引入 Tailwind CSS 让界面更好看 -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 h-screen flex flex-col font-sans">
+<body class="bg-gray-50 h-screen flex flex-col font-sans overflow-hidden">
 
-    <!-- 顶部导航栏 -->
-    <header class="bg-blue-600 text-white p-4 shadow-md flex justify-between items-center z-10">
-        <div class="flex items-center space-x-3">
+    <!-- 顶部导航栏 (手机端自适应折叠) -->
+    <header class="bg-blue-600 text-white p-3 md:p-4 shadow-md flex flex-col md:flex-row justify-between items-center z-10 space-y-3 md:space-y-0 shrink-0">
+        <div class="flex items-center space-x-2 w-full md:w-auto justify-center md:justify-start">
             <span class="text-2xl">🚀</span>
-            <h1 class="text-xl font-bold">AI 会议原型生成器</h1>
+            <h1 class="text-lg md:text-xl font-bold truncate">AI会议原型生成器</h1>
         </div>
-        <div class="flex items-center space-x-3">
-            <div class="flex flex-col">
-                <label class="text-xs text-blue-200 mb-1">API 代理接口 (Base URL):</label>
-                <!-- 默认值帮你留空，你可以填入你的 http://1.95.142.151:3000/v1 -->
-                <input type="text" id="apiUrl" placeholder="例如: http://1.95.142.151:3000/v1" class="text-black px-2 py-1.5 rounded w-56 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+        <div class="flex flex-col md:flex-row items-center w-full md:w-auto space-y-2 md:space-y-0 md:space-x-3">
+            <div class="flex flex-row md:flex-col items-center md:items-start w-full md:w-auto justify-between md:justify-start gap-2">
+                <label class="text-xs text-blue-200 whitespace-nowrap">API 代理接口:</label>
+                <input type="text" id="apiUrl" placeholder="如: http://1.95.142.151:3000/v1" class="flex-1 md:flex-none text-black px-2 py-1.5 rounded md:w-48 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
             </div>
-            <div class="flex flex-col">
-                <label class="text-xs text-blue-200 mb-1">Claude API Key:</label>
-                <input type="password" id="apiKey" placeholder="sk-ant-..." class="text-black px-2 py-1.5 rounded w-56 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+            <div class="flex flex-row md:flex-col items-center md:items-start w-full md:w-auto justify-between md:justify-start gap-2">
+                <label class="text-xs text-blue-200 whitespace-nowrap">Claude 密钥:</label>
+                <input type="password" id="apiKey" placeholder="sk-ant-..." class="flex-1 md:flex-none text-black px-2 py-1.5 rounded md:w-48 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
             </div>
         </div>
     </header>
 
-    <!-- 主工作区 -->
-    <div class="flex-1 flex overflow-hidden p-4 space-x-4">
-
-        <!-- 左侧：输入与控制面板 -->
-        <div class="w-1/3 flex flex-col space-y-4 bg-white p-5 rounded-lg shadow border border-gray-100">
-            <div class="flex justify-between items-center">
-                <h2 class="font-bold text-gray-800 text-lg">📝 会议纪要</h2>
-                <button id="recordBtn" class="bg-red-50 px-3 py-1.5 rounded-full text-red-600 font-medium hover:bg-red-100 transition-colors flex items-center shadow-sm border border-red-200">
-                    <span id="recordIcon" class="mr-1 text-lg">🎙️</span>
-                    <span id="recordText">开始录音</span>
+    <!-- 主工作区 (手机端变上下排版，电脑端左右排版) -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden p-3 md:p-4 space-y-4 md:space-y-0 md:space-x-4">
+        
+        <!-- 左侧/上半部分：输入与控制面板 -->
+        <div class="w-full md:w-1/3 flex flex-col space-y-3 bg-white p-4 rounded-lg shadow border border-gray-100 shrink-0 md:shrink">
+            <h2 class="font-bold text-gray-800 text-lg flex items-center">📝 需求提炼区</h2>
+            
+            <div class="flex space-x-2">
+                <!-- 录音按钮 -->
+                <button id="recordBtn" class="flex-1 bg-red-50 py-2 rounded-md text-red-600 font-medium hover:bg-red-100 transition-colors flex items-center justify-center border border-red-200 text-sm">
+                    <span id="recordIcon" class="mr-1">🎙️</span> 
+                    <span id="recordText">语音录入</span>
+                </button>
+                <!-- 提炼按钮 (新增) -->
+                <button id="refineBtn" class="flex-1 bg-purple-50 py-2 rounded-md text-purple-600 font-medium hover:bg-purple-100 transition-colors flex items-center justify-center border border-purple-200 text-sm">
+                    <span id="refineIcon" class="mr-1">🤖</span> 
+                    <span id="refineText">AI 梳理纪要</span>
                 </button>
             </div>
-
-            <p class="text-xs text-gray-400">点击上方按钮录音，或者在此处直接输入/粘贴会议记录、需求描述。</p>
-
-            <textarea id="minutes" class="flex-1 border border-gray-300 p-3 rounded-md resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 leading-relaxed" placeholder="例如：页面二：宠物详情页(Pet Detail)&#10;顶部：全屏尺寸的宠物照片轮播图..."></textarea>
-
-            <button id="generateBtn" class="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-bold text-lg transition-colors shadow-md flex justify-center items-center">
-                ✨ 召唤 Claude 生成原型
+            
+            <p class="text-xs text-gray-400">口述完流水账后，点击<span class="text-purple-500 font-bold">【AI 梳理纪要】</span>让大模型自动提炼出结构化的需求文档。</p>
+            
+            <textarea id="minutes" class="flex-1 min-h-[150px] md:min-h-0 border border-gray-300 p-3 rounded-md resize-none focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-700 leading-relaxed text-sm md:text-base" placeholder="您可以直接录音，或者在此输入口语化的会议记录..."></textarea>
+            
+            <button id="generateBtn" class="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-md font-bold text-base md:text-lg transition-colors shadow-md flex justify-center items-center">
+                ✨ 生成原型
             </button>
         </div>
 
-        <!-- 右侧：预览与代码展示区 -->
-        <div class="w-2/3 flex flex-col bg-white p-5 rounded-lg shadow border border-gray-100">
+        <!-- 右侧/下半部分：预览与代码展示区 -->
+        <div class="w-full md:w-2/3 min-h-[500px] md:min-h-0 flex flex-col bg-white p-4 rounded-lg shadow border border-gray-100">
             <div class="flex justify-between items-center mb-3">
                 <h2 class="font-bold text-gray-800 text-lg">💻 原型预览</h2>
                 <div class="space-x-4 text-sm">
-                    <button id="tabPreview" class="text-blue-600 font-bold border-b-2 border-blue-600 pb-1">视图</button>
-                    <button id="tabCode" class="text-gray-500 hover:text-blue-600 pb-1">HTML源码</button>
+                    <button id="tabPreview" class="text-blue-600 font-bold border-b-2 border-blue-600 pb-1 px-1">可视化视图</button>
+                    <button id="tabCode" class="text-gray-500 hover:text-blue-600 pb-1 px-1">HTML源码</button>
                 </div>
             </div>
-
+            
             <!-- 加载动画 -->
-            <div id="loading" class="hidden flex-1 flex-col items-center justify-center text-gray-500 bg-gray-50 rounded-md border border-dashed border-gray-300">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mb-4"></div>
-                <p class="text-lg font-medium text-gray-700">Claude 正在思考并绘制 UI 原型...</p>
-                <p class="text-sm mt-2">（这可能需要 10-30 秒，取决于页面复杂度）</p>
+            <div id="loading" class="hidden flex-1 flex-col items-center justify-center text-gray-500 bg-gray-50 rounded-md border border-dashed border-gray-300 p-4 text-center">
+                <div class="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-4 border-blue-600 mb-4"></div>
+                <p id="loadingText" class="text-base md:text-lg font-medium text-gray-700">Claude 正在处理中...</p>
+                <p class="text-xs md:text-sm mt-2">（视内容复杂度，可能需要 5-30 秒）</p>
             </div>
 
             <!-- 原型渲染区 -->
-            <iframe id="previewFrame" class="flex-1 border border-gray-200 rounded-md w-full h-full bg-gray-50"></iframe>
-
+            <iframe id="previewFrame" class="flex-1 border border-gray-200 rounded-md w-full h-full bg-gray-50 min-h-[400px]"></iframe>
+            
             <!-- 代码展示区 -->
-            <textarea id="codeView" class="hidden flex-1 border border-gray-200 p-4 rounded-md resize-none font-mono text-sm bg-gray-900 text-green-400" readonly></textarea>
+            <textarea id="codeView" class="hidden flex-1 border border-gray-200 p-3 md:p-4 rounded-md resize-none font-mono text-xs md:text-sm bg-gray-900 text-green-400 min-h-[400px]" readonly></textarea>
         </div>
     </div>
 
     <script>
-        // === 1. 语音识别逻辑 (Web Speech API) ===
+        // === 提取通用的 API 调用函数 ===
+        async function callClaudeAPI(systemPrompt, userText) {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            let rawUrl = document.getElementById('apiUrl').value.trim();
+
+            if (!rawUrl) throw new Error("请输入 API 代理接口地址！");
+            if (!apiKey) throw new Error("请输入 Claude API Key！");
+            if (!userText) throw new Error("输入内容不能为空！");
+
+            let baseUrl = rawUrl.replace(/\/$/, '');
+            if (baseUrl.endsWith('/v1')) {
+                baseUrl = baseUrl.slice(0, -3);
+            }
+            const fetchUrl = `${baseUrl}/v1/messages`;
+
+            const response = await fetch(fetchUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': apiKey,
+                    'anthropic-version': '2023-06-01',
+                    'anthropic-dangerously-allow-browser': 'true',
+                    'Authorization': `Bearer ${apiKey}` 
+                },
+                body: JSON.stringify({
+                    model: 'claude-3-5-sonnet-20241022',
+                    max_tokens: 8000,
+                    system: systemPrompt,
+                    messages:[ { role: 'user', content: userText } ]
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                let errorMsg = errorData.error?.message || errorData.message || `状态码: ${response.status}`;
+                throw new Error(`请求接口失败\n错误详情: ${errorMsg}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+                return data.choices[0].message.content; // OpenAI 格式兼容
+            } else if (data.content && data.content.length > 0) {
+                return data.content[0].text; // Anthropic 原生格式
+            } else {
+                throw new Error('未知的 API 响应格式，请检查代理设置。');
+            }
+        }
+
+
+        // === 1. 语音识别逻辑 ===
         const recordBtn = document.getElementById('recordBtn');
         const recordText = document.getElementById('recordText');
         const recordIcon = document.getElementById('recordIcon');
         const minutesArea = document.getElementById('minutes');
-
+        
         let isRecording = false;
         let recognition = null;
 
@@ -104,7 +160,6 @@
                     minutesArea.scrollTop = minutesArea.scrollHeight;
                 }
             };
-
             recognition.onerror = function(event) {
                 console.error("语音识别错误:", event.error);
                 if(event.error === 'not-allowed') {
@@ -113,7 +168,7 @@
                 }
             };
         } else {
-            recordBtn.onclick = () => alert('您的浏览器不支持语音识别功能，请使用最新版 Chrome 浏览器，或手动输入会议纪要。');
+            recordBtn.onclick = () => alert('您的手机浏览器不支持原生语音识别，请手动输入。推荐使用 Chrome/Safari 浏览器。');
         }
 
         function startRecording() {
@@ -131,7 +186,7 @@
             if(!recognition) return;
             recognition.stop();
             isRecording = false;
-            recordText.innerText = '开始录音';
+            recordText.innerText = '语音录入';
             recordIcon.innerText = '🎙️';
             recordBtn.classList.replace('bg-red-600', 'bg-red-50');
             recordBtn.classList.replace('text-white', 'text-red-600');
@@ -139,52 +194,78 @@
         }
 
         recordBtn.addEventListener('click', () => {
-            if (isRecording) {
-                stopRecording();
-            } else {
-                startRecording();
+            if (isRecording) stopRecording();
+            else startRecording();
+        });
+
+
+        // === 2. AI 梳理纪要逻辑 (新增) ===
+        const refineBtn = document.getElementById('refineBtn');
+        const refineText = document.getElementById('refineText');
+        const refineIcon = document.getElementById('refineIcon');
+
+        refineBtn.addEventListener('click', async () => {
+            const rawText = minutesArea.value.trim();
+            if(!rawText) {
+                alert("文本框为空，请先录音或输入内容！");
+                return;
+            }
+
+            // UI 状态切换
+            refineBtn.disabled = true;
+            refineText.innerText = '正在提炼...';
+            refineIcon.innerText = '⏳';
+            refineBtn.classList.replace('bg-purple-50', 'bg-gray-200');
+            refineBtn.classList.replace('text-purple-600', 'text-gray-500');
+
+            try {
+                const prompt = `你是一个资深的软件产品经理。用户的输入是一段通过语音转录的、口语化的原始会议记录。
+你的任务是：将其提炼、整理成结构清晰、专业的前端页面 UI/UX 需求文档。
+要求：
+1. 提取出核心的：页面结构、元素组成、功能交互、业务逻辑。
+2. 剔除所有啰嗦的废话、口语和不相关的寒暄。
+3. 直接输出提炼后的结构化文本，禁止输出任何多余的开场白或解释。`;
+
+                const refinedText = await callClaudeAPI(prompt, rawText);
+                
+                // 将提炼好的内容替换回去
+                minutesArea.value = refinedText;
+                
+            } catch (error) {
+                alert(`提炼失败: ${error.message}`);
+            } finally {
+                // 恢复 UI
+                refineBtn.disabled = false;
+                refineText.innerText = 'AI 梳理纪要';
+                refineIcon.innerText = '🤖';
+                refineBtn.classList.replace('bg-gray-200', 'bg-purple-50');
+                refineBtn.classList.replace('text-gray-500', 'text-purple-600');
             }
         });
 
-        // === 2. 调用 Claude API 逻辑 ===
+
+        // === 3. 生成原型逻辑 ===
         const generateBtn = document.getElementById('generateBtn');
         const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
         const previewFrame = document.getElementById('previewFrame');
         const codeView = document.getElementById('codeView');
 
         generateBtn.addEventListener('click', async () => {
-            const apiKey = document.getElementById('apiKey').value.trim();
             const minutes = minutesArea.value.trim();
-            let rawUrl = document.getElementById('apiUrl').value.trim();
-
-            if (!rawUrl) {
-                alert("请输入 API 代理接口地址！");
-                return;
-            }
-            if (!apiKey) {
-                alert("请输入 Claude API Key！");
-                return;
-            }
             if (!minutes) {
-                alert("会议纪要为空，请先录音或手动输入需求！");
+                alert("需求内容为空，请先录入需求！");
                 return;
             }
-
-            // 智能处理 URL：去除结尾的斜杠，以及结尾的 /v1 防止拼接重复
-            let baseUrl = rawUrl.replace(/\/$/, '');
-            if (baseUrl.endsWith('/v1')) {
-                baseUrl = baseUrl.slice(0, -3); // 截断结尾的 /v1
-            }
-
-            // 最终的请求地址
-            const fetchUrl = `${baseUrl}/v1/messages`;
 
             previewFrame.classList.add('hidden');
             codeView.classList.add('hidden');
             loading.classList.remove('hidden');
             loading.classList.add('flex');
+            loadingText.innerText = 'Claude 正在思考并绘制 UI 原型...';
+            
             generateBtn.disabled = true;
-            generateBtn.innerText = '请求中...';
+            generateBtn.innerText = '生成中...';
             generateBtn.classList.replace('bg-blue-600', 'bg-gray-400');
 
             try {
@@ -192,46 +273,11 @@
 要求：
 1. 只输出完整的、可运行的单文件 HTML 代码。
 2. 必须在 <head> 中通过 CDN 引入 Tailwind CSS (<script src="https://cdn.tailwindcss.com"><\/script>) 来进行页面美化。
-3. 界面设计要符合现代企业级应用的标准（合理的内边距、好看的色彩搭配、清晰的层级结构）。
+3. 界面设计要符合现代移动优先(Mobile-First)的企业级应用标准，必须完美适配手机端屏幕。
 4. 如果有交互需求，可以使用原生 JavaScript 实现简单的界面切换、弹窗等效果。
-5. 【重要】只返回 <!DOCTYPE html> 开头的纯 HTML 代码，不要用 markdown 代码块包裹，不要包含任何解释性文字。`;
+5. 【重要】只返回 <!DOCTYPE html> 开头的纯 HTML 代码，不要用 markdown 代码块包裹，不要包含任何解释文字。`;
 
-                const response = await fetch(fetchUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': apiKey,
-                        'anthropic-version': '2023-06-01',
-                        'anthropic-dangerously-allow-browser': 'true',
-                        'Authorization': `Bearer ${apiKey}` // 兼容 OneAPI 等代理的身份验证
-                    },
-                    body: JSON.stringify({
-                        model: 'claude-3-5-sonnet-20241022',
-                        max_tokens: 8000,
-                        system: systemPrompt,
-                        messages:[
-                            { role: 'user', content: `这是我们的会议纪要/需求，请帮我生成原型图：\n\n${minutes}` }
-                        ]
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    let errorMsg = errorData.error?.message || errorData.message || `状态码: ${response.status}`;
-                    throw new Error(`请求接口失败\n错误详情: ${errorMsg}\n\n当前请求的完整地址是: ${fetchUrl}`);
-                }
-
-                const data = await response.json();
-
-                // 兼容不同代理返回的数据结构 (有些代理包装成了 OpenAI 格式)
-                let htmlContent = '';
-                if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-                    htmlContent = data.choices[0].message.content; // OpenAI 格式
-                } else if (data.content && data.content.length > 0) {
-                    htmlContent = data.content[0].text; // Anthropic 原生格式
-                } else {
-                    throw new Error('未知的 API 响应格式，请检查你的代理设置。');
-                }
+                let htmlContent = await callClaudeAPI(systemPrompt, minutes);
 
                 const match = htmlContent.match(/```html\s*([\s\S]*?)```/);
                 if (match) {
@@ -244,11 +290,15 @@
                 loading.classList.remove('flex');
                 loading.classList.add('hidden');
                 previewFrame.classList.remove('hidden');
-
+                
                 document.getElementById('tabPreview').click();
 
+                // 手机端自动滚动到底部预览区
+                if (window.innerWidth < 768) {
+                    previewFrame.scrollIntoView({ behavior: 'smooth' });
+                }
+
             } catch (error) {
-                console.error(error);
                 alert(`${error.message}`);
                 loading.classList.remove('flex');
                 loading.classList.add('hidden');
@@ -260,7 +310,7 @@
             }
         });
 
-        // === 3. 视图/源码 Tab 切换 ===
+        // === 4. 视图/源码 Tab 切换 ===
         const tabPreview = document.getElementById('tabPreview');
         const tabCode = document.getElementById('tabCode');
 
@@ -269,7 +319,7 @@
             tabPreview.classList.remove('text-gray-500');
             tabCode.classList.remove('text-blue-600', 'font-bold', 'border-blue-600');
             tabCode.classList.add('text-gray-500');
-
+            
             codeView.classList.add('hidden');
             previewFrame.classList.remove('hidden');
         });
@@ -279,7 +329,7 @@
             tabCode.classList.remove('text-gray-500');
             tabPreview.classList.remove('text-blue-600', 'font-bold', 'border-blue-600');
             tabPreview.classList.add('text-gray-500');
-
+            
             previewFrame.classList.add('hidden');
             codeView.classList.remove('hidden');
         });
