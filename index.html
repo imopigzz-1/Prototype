@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>会议纪要 → HTML 原型</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+:root{--bg:#07080c;--s1:#0d0e14;--s2:#121318;--s3:#181920;--b1:#1e1f2e;--b2:#252638;--accent:#5b7fff;--glow:rgba(91,127,255,.13);--purple:#8b5cf6;--green:#10b981;--red:#ef4444;--text:#dde1f0;--t2:#6b7394;--t3:#32354a}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 700px 400px at 50% -60px,rgba(91,127,255,.055) 0%,transparent 65%);pointer-events:none}
+.wrap{max-width:1120px;margin:0 auto;padding:44px 22px 100px}
+
+.hd{text-align:center;margin-bottom:38px}
+.badge{display:inline-flex;align-items:center;gap:7px;padding:5px 16px;background:rgba(91,127,255,.1);border:1px solid rgba(91,127,255,.22);border-radius:99px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--accent);letter-spacing:.1em;margin-bottom:18px}
+.bdot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:clamp(26px,4vw,44px);font-weight:700;letter-spacing:-.025em;background:linear-gradient(140deg,#fff 20%,#a5b4fc 60%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px;line-height:1.1}
+.sub{font-size:13px;color:var(--t2);line-height:1.7}
+
+.keybar{display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:12px 16px;margin-bottom:20px;transition:border-color .2s}
+.keybar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+.kdot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0}
+.keybar label{font-size:10px;color:var(--t2);font-family:'IBM Plex Mono',monospace;white-space:nowrap;letter-spacing:.1em;flex-shrink:0}
+.keybar input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:13px;font-family:'IBM Plex Mono',monospace;min-width:0}
+.keybar input::placeholder{color:var(--t3)}
+.key-hint{font-size:11px;color:var(--t3);flex-shrink:0}
+
+.cols{display:grid;grid-template-columns:400px 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:860px){.cols{grid-template-columns:1fr}}
+
+.panel{background:var(--s1);border:1px solid var(--b1);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.ph{display:flex;align-items:center;gap:8px;padding:13px 16px;border-bottom:1px solid var(--b1);background:var(--s2);font-size:13px;font-weight:500;color:var(--t2)}
+.phd{width:6px;height:6px;border-radius:50%}
+.pb{padding:15px;flex:1;display:flex;flex-direction:column;gap:11px}
+
+textarea{flex:1;min-height:230px;background:var(--s3);border:1px solid var(--b1);border-radius:10px;padding:14px;color:var(--text);font-family:'Noto Sans SC',sans-serif;font-size:13px;line-height:1.85;resize:vertical;outline:none;transition:border-color .2s,box-shadow .2s}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+textarea::placeholder{color:var(--t3);line-height:1.9}
+
+.og{display:flex;flex-direction:column;gap:5px}
+.lbl{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
+select{background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;cursor:pointer;font-family:'Noto Sans SC',sans-serif;width:100%;transition:border-color .2s}
+select:focus{border-color:var(--accent)}
+
+.nrow{display:flex;gap:5px}
+.nb{flex:1;padding:7px 0;background:var(--s3);border:1px solid var(--b1);border-radius:8px;color:var(--t2);font-size:12px;cursor:pointer;text-align:center;font-family:'Noto Sans SC',sans-serif;transition:all .15s}
+.nb.on{background:rgba(91,127,255,.12);border-color:var(--accent);color:var(--accent)}
+
+.btngen{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--purple));border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:700;font-family:'Noto Sans SC',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s}
+.btngen:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(91,127,255,.3)}
+.btngen:active{transform:none}
+.btngen:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.spin{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.prog{display:none;flex-direction:column;gap:2px}
+.ps{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;font-size:12px;color:var(--t3);transition:all .3s}
+.ps.on{background:rgba(91,127,255,.07);color:var(--accent)}
+.ps.ok{color:var(--green)}
+.ps.er{color:var(--red)}
+.pi{width:18px;text-align:center;font-size:13px}
+
+.errbox{display:none;padding:11px 14px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.18);border-radius:9px;color:#f87171;font-size:12px;line-height:1.7}
+
+.ana-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--t3);text-align:center;padding:30px}
+.emico{font-size:44px;opacity:.16}
+.ana-body{display:none;flex:1;overflow-y:auto}
+.chip{padding:3px 10px;border-radius:99px;font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:700;display:inline-flex;align-items:center;margin-right:4px;margin-bottom:4px}
+.ca{background:rgba(91,127,255,.12);color:var(--accent);border:1px solid rgba(91,127,255,.2)}
+.cb{background:rgba(139,92,246,.12);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+.cc{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.arow{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--b1)}
+.arow:last-child{border:none}
+.ak{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;min-width:54px;padding-top:2px;flex-shrink:0}
+.av{font-size:12px;line-height:1.6;color:var(--text);flex:1}
+.ftags{display:flex;flex-wrap:wrap;gap:4px}
+.ft{padding:2px 7px;background:var(--s3);border:1px solid var(--b2);border-radius:4px;font-size:10px;color:var(--t2)}
+
+.output{display:none;margin-top:4px}
+.out-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.out-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.out-acts{display:flex;gap:7px}
+.bsm{padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .15s;border:1px solid var(--b2);background:transparent;color:var(--t2)}
+.bsm:hover{border-color:var(--accent);color:var(--accent)}
+.bsm.pri{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.bsm.pri:hover{background:#7090ff}
+
+.pgrid{display:grid;gap:16px}
+.pgrid.n1{grid-template-columns:1fr}
+.pgrid.n2{grid-template-columns:repeat(2,1fr)}
+.pgrid.n3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:760px){.pgrid.n2,.pgrid.n3{grid-template-columns:1fr}}
+
+.pcard{background:var(--s1);border:1px solid var(--b1);border-radius:16px;overflow:hidden;transition:border-color .2s}
+.pcard:hover{border-color:var(--b2)}
+.pcard-hd{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;border-bottom:1px solid var(--b1);background:var(--s2)}
+.pcard-label{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:7px}
+.pcard-acts{display:flex;gap:5px}
+.act{padding:4px 10px;background:var(--s3);border:1px solid var(--b2);border-radius:6px;color:var(--t2);font-size:11px;cursor:pointer;font-family:'Noto Sans SC',sans-serif;transition:all .15s}
+.act:hover{border-color:var(--accent);color:var(--accent)}
+
+.mobile-wrap{display:flex;justify-content:center;align-items:flex-start;padding:28px 20px 24px;background:#0a0a10;min-height:640px}
+.phone{position:relative;width:375px;border-radius:50px;background:#1a1a1a;box-shadow:0 0 0 2px #2a2a2a,0 0 0 5px #111,0 0 0 7px #222,0 30px 80px rgba(0,0,0,.7);overflow:hidden;flex-shrink:0}
+.phone-top{height:10px;background:#1a1a1a;display:flex;justify-content:center}
+.notch{width:100px;height:26px;background:#111;border-radius:0 0 16px 16px}
+.phone iframe{width:100%;height:700px;border:none;display:block;border-radius:0 0 44px 44px}
+
+.browser-bar{background:var(--s2);border-bottom:1px solid var(--b1);padding:10px 14px;display:flex;align-items:center;gap:8px}
+.bdots{display:flex;gap:6px}
+.bd{width:11px;height:11px;border-radius:50%}
+.url-bar{flex:1;background:var(--s3);border:1px solid var(--b1);border-radius:6px;padding:4px 10px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--t2)}
+.desktop-iframe{width:100%;height:560px;border:none;display:block}
+
+.code-tog{display:flex;align-items:center;gap:8px;padding:10px 15px;border-top:1px solid var(--b1);cursor:pointer;font-size:12px;color:var(--t2);background:var(--s2);user-select:none;transition:color .15s}
+.code-tog:hover{color:var(--accent)}
+.arr{font-size:9px;transition:transform .2s}
+.code-tog.open .arr{transform:rotate(90deg)}
+.code-box{display:none;border-top:1px solid var(--b1);max-height:320px;overflow:auto;background:#050507}
+.code-box pre{padding:16px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:#7c839a;line-height:1.75;white-space:pre-wrap;word-break:break-word}
+
+.sk{background:linear-gradient(90deg,var(--s2) 25%,var(--s3) 50%,var(--s2) 75%);background-size:200% 100%;animation:sh 1.4s infinite;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--t3);font-size:12px}
+@keyframes sh{to{background-position:-200% 0}}
+.ski{font-size:28px;opacity:.22;animation:pu 2s ease-in-out infinite}
+@keyframes pu{0%,100%{opacity:.22}50%{opacity:.45}}
+
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <div class="badge"><div class="bdot"></div>MEETING → HTML PROTOTYPE</div>
+    <h1>会议纪要直出可点击原型</h1>
+    <p class="sub">粘贴任意格式会议纪要 · Claude 分析需求 · 直接生成浏览器可点击的 HTML 原型</p>
+  </div>
+
+  <div class="keybar">
+    <div class="kdot"></div>
+    <label>CLAUDE KEY</label>
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-... 填入后 AI 按需求生成，不填使用演示模式" />
+    <span class="key-hint">api.anthropic.com</span>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <div class="ph"><div class="phd" style="background:var(--accent)"></div>会议纪要</div>
+      <div class="pb">
+        <textarea id="meetInput" placeholder="直接粘贴你的会议纪要 ——
+
+格式不限、内容不限：
+• 产品需求评审会记录
+• 客户访谈 / 用户调研笔记
+• 设计讨论 / 迭代规划纪要
+• 随手整理的需求草稿
+
+Claude 自动识别是移动端还是 PC，
+生成对应的带手机壳 / 浏览器框的
+可点击 HTML 原型。"></textarea>
+
+        <div class="og">
+          <div class="lbl">设备（留空自动判断）</div>
+          <select id="device">
+            <option value="auto">✨ 自动判断</option>
+            <option value="mobile">📱 移动端 / 小程序</option>
+            <option value="desktop">🖥 PC Web / 后台系统</option>
+          </select>
+        </div>
+
+        <div class="og">
+          <div class="lbl">视觉风格</div>
+          <select id="vstyle">
+            <option value="modern">简洁现代（默认）</option>
+            <option value="dark">深色科技风</option>
+            <option value="warm">温暖商务风</option>
+            <option value="minimal">极简线条风</option>
+          </select>
+        </div>
+
+        <div class="og">
+          <div class="lbl">生成方案数</div>
+          <div class="nrow">
+            <button class="nb on" onclick="setN(1,this)">1 套</button>
+            <button class="nb" onclick="setN(2,this)">2 套</button>
+            <button class="nb" onclick="setN(3,this)">3 套</button>
+          </div>
+        </div>
+
+        <button class="btngen" id="genBtn" onclick="run()">
+          <span class="spin" id="spin"></span>
+          <span id="btnTxt">🚀 生成 HTML 原型</span>
+        </button>
+
+        <div class="errbox" id="errbox"></div>
+        <div class="prog" id="prog">
+          <div class="ps" id="ps1"><span class="pi">🧠</span><span id="ps1t">理解会议纪要…</span></div>
+          <div class="ps" id="ps2"><span class="pi">🎨</span><span id="ps2t">Claude 生成 HTML…</span></div>
+          <div class="ps" id="ps3"><span class="pi">✅</span><span>渲染完成，可点击交互</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ph"><div class="phd" style="background:var(--purple)"></div>需求分析</div>
+      <div class="pb">
+        <div class="ana-empty" id="anaEmpty">
+          <div class="emico">📋</div>
+          <div style="font-size:13px;line-height:1.8;color:var(--t3)">粘贴任意格式的会议纪要<br>Claude 自动提炼页面需求</div>
+        </div>
+        <div class="ana-body" id="anaBody"><div id="anaRows"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="output" id="output">
+    <div class="out-hd">
+      <div class="out-title">🖥 原型预览 <span id="outlabel" style="font-size:12px;font-weight:400;color:var(--t2)"></span></div>
+      <div class="out-acts">
+        <button class="bsm" onclick="dlAll()">⬇ 下载 HTML</button>
+        <button class="bsm pri" onclick="run()">🔄 重新生成</button>
+      </div>
+    </div>
+    <div class="pgrid n1" id="pgrid"></div>
+  </div>
+</div>
+
+<script>
+let protoN=1, results=[];
+
+function setN(n,btn){protoN=n;document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));btn.classList.add('on')}
+function step(n,s){for(let i=1;i<=3;i++){const el=document.getElementById('ps'+i);el.classList.remove('on','ok','er');if(i<n)el.classList.add('ok');else if(i===n)el.classList.add(s||'on')}}
+function stepMsg(n,m){const el=document.getElementById('ps'+n+'t');if(el)el.textContent=m}
+function showErr(m){const e=document.getElementById('errbox');e.innerHTML='⚠ '+m;e.style.display='block'}
+function hideErr(){document.getElementById('errbox').style.display='none'}
+function busy(is){document.getElementById('genBtn').disabled=is;document.getElementById('spin').style.display=is?'block':'none';document.getElementById('btnTxt').textContent=is?'生成中…':'🚀 生成 HTML 原型';document.getElementById('prog').style.display=is?'flex':'none'}
+
+async function callClaude(system,user,tokens=4096){
+  const key=document.getElementById('apiKey').value.trim();
+  if(!key)return null;
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:tokens,system,messages:[{role:'user',content:user}]})});
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.content.map(c=>c.text||'').join('');
+}
+
+async function analyze(text,deviceHint){
+  const raw=await callClaude(
+    '分析会议纪要，返回纯JSON（无markdown）：{"pageName":"主页面名","device":"mobile或desktop","productType":"产品类型","pages":["页面1","页面2"],"features":["功能1","功能2","功能3","功能4","功能5"],"uiStyle":"风格","primaryColor":"主色","interactions":["交互1","交互2"]}',
+    '设备偏好：'+deviceHint+'\n\n会议纪要：\n'+text
+  );
+  if(!raw){
+    const isMobile=deviceHint==='mobile'||(deviceHint==='auto'&&/手机|移动|app|小程序/i.test(text));
+    const lines=text.split('\n').filter(l=>/^\d+[\.、]|^[-•]/.test(l.trim()));
+    const features=lines.map(l=>l.replace(/^\d+[\.、]|^[-•]\s*/,'').trim()).filter(f=>f.length>2).slice(0,5);
+    return{pageName:'主功能页',device:isMobile?'mobile':'desktop',productType:'待分析',pages:['主页面'],features:features.length?features:['主要功能'],uiStyle:'简洁现代',primaryColor:'蓝色',interactions:['按钮点击','Tab切换']};
+  }
+  try{return JSON.parse(raw.replace(/```json|```/g,'').trim())}
+  catch{return{pageName:'主功能页',device:deviceHint==='auto'?'mobile':deviceHint,productType:'待分析',pages:['主页面'],features:['主要功能'],uiStyle:'简洁现代',primaryColor:'蓝色',interactions:[]}}
+}
+
+function renderAnalysis(a){
+  document.getElementById('anaEmpty').style.display='none';
+  document.getElementById('anaBody').style.display='block';
+  const devLabel=a.device==='mobile'?'📱 移动端':'🖥 PC端';
+  document.getElementById('anaRows').innerHTML=
+    `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px"><span class="chip ca">${devLabel}</span><span class="chip cb">${a.uiStyle}</span><span class="chip cc">${a.primaryColor}主题</span></div>
+    <div class="arow"><div class="ak">产品</div><div class="av">${a.productType}</div></div>
+    <div class="arow"><div class="ak">页面</div><div class="av">${a.pages.join(' → ')}</div></div>
+    <div class="arow"><div class="ak">功能</div><div class="av"><div class="ftags">${a.features.map(f=>`<span class="ft">${f.replace(/[：:].*/,'').trim().substring(0,18)}</span>`).join('')}</div></div></div>
+    <div class="arow"><div class="ak">交互</div><div class="av">${a.interactions.join('、')||'Tab切换、按钮点击'}</div></div>`;
+}
+
+const STYLE_GUIDE={
+  modern:'白色背景，蓝色主色调(#5b7fff)，圆角卡片，清晰投影，Google Noto Sans SC字体，清爽专业',
+  dark:'深色背景(#0f1117)，蓝紫渐变主色，卡片发光边框，科技感强，IBM Plex Mono点缀',
+  warm:'米白/奶油背景，橙金主色，温暖阴影，商务质感，ZCOOL XiaoWei或Noto Serif SC',
+  minimal:'纯白背景，灰色细线边框，极少色彩，大量留白，极简美学，精准的字号层级'
+};
+
+const VARIANT_GUIDE=['标准布局，经典配色，注重功能完整性','紧凑布局，强调关键数据和操作效率','卡片流布局，视觉层次丰富，适合展示汇报'];
+
+async function genHTML(text,analysis,idx,total,stylePref){
+  const isMobile=analysis.device==='mobile';
+  const key=document.getElementById('apiKey').value.trim();
+  if(!key)return getDemoHTML(analysis,isMobile,stylePref);
+
+  const varNote=total>1?`\n这是第${idx+1}套方案（共${total}套）：${VARIANT_GUIDE[idx]||'差异化布局'}。`:'';
+  const system=`你是顶级UI工程师，专注高保真HTML原型。严格规则：
+1. 输出完整可运行HTML，含<!DOCTYPE html>
+2. 所有CSS写在<style>标签内，不引用任何外部CDN（字体除外）
+3. 字体从Google Fonts引入，选一种适合中文的字体
+4. 视觉风格：${STYLE_GUIDE[stylePref]||STYLE_GUIDE.modern}
+5. ${isMobile?'移动端：body最大宽度375px居中，模拟真实App，含顶部导航栏、内容区、底部Tab栏':'PC端：全宽布局，含侧边栏或顶部导航，主内容区有实质性内容'}
+6. 所有区块填充真实占位内容（真实数字、用户名、状态标签、日期等）
+7. 至少3处JS交互：Tab切换、弹窗、展开收起、按钮状态切换等
+8. 不用任何图片标签，用CSS形状或emoji代替图标
+9. 只输出HTML代码，不要任何解释${varNote}`;
+
+  const raw=await callClaude(system,
+    `会议纪要：\n${text}\n\n已分析结论：\n产品：${analysis.productType}\n页面：${analysis.pages.join('、')}\n功能：${analysis.features.join('、')}\n交互：${analysis.interactions.join('、')}\n配色：${analysis.primaryColor}主题\n\n请直接输出HTML：`,
+    4096);
+
+  if(!raw)return getDemoHTML(analysis,isMobile,stylePref);
+  const m=raw.match(/<!DOCTYPE[\s\S]*<\/html>/i)||raw.match(/<html[\s\S]*<\/html>/i);
+  return{code:m?m[0]:raw,isMobile,title:total>1?`方案 ${idx+1}`:analysis.pageName};
+}
+
+function getDemoHTML(a,isMobile,sp){
+  const dark=sp==='dark';
+  const bg=dark?'#0f1117':'#f8fafc',card=dark?'#161922':'#fff',text=dark?'#e1e4f0':'#1e293b',sub=dark?'#7c839a':'#64748b',acc='#5b7fff',br=dark?'#1e2030':'#e2e8f0';
+  const mob=`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${a.pageName}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'PingFang SC',sans-serif;background:${bg};max-width:375px;margin:0 auto;min-height:100vh}
+.nav{background:${card};padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid ${br};position:sticky;top:0;z-index:10}
+.card{background:${card};margin:10px 14px;border-radius:14px;padding:16px;border:1px solid ${br};transition:all .2s;cursor:pointer}
+.card:active{transform:scale(.98);border-color:${acc}}
+.tag{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;background:rgba(91,127,255,.1);color:${acc};margin-bottom:8px}
+.bot{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:375px;background:${card};border-top:1px solid ${br};display:flex}
+.ti{flex:1;padding:10px 0 14px;text-align:center;cursor:pointer;font-size:10px;color:${sub}}
+.ti.on{color:${acc}}.ti .ico{font-size:20px;display:block;margin-bottom:2px}</style></head>
+<body>
+<div class="nav"><span style="font-size:17px;font-weight:700;color:${acc}">${a.pageName}</span><span style="font-size:20px">🔔</span></div>
+${a.features.slice(0,4).map((f,i)=>`<div class="card"><div class="tag">功能 ${i+1}</div><div style="font-size:15px;font-weight:600;color:${text};margin-bottom:4px">${f.replace(/[：:].*/,'').trim()}</div><div style="font-size:12px;color:${sub};line-height:1.6">${f}</div><div style="margin-top:10px;display:flex;gap:8px"><button onclick="alert('操作成功！')" style="flex:1;padding:8px;background:${acc};color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">操作</button><button onclick="this.textContent=this.textContent==='收藏'?'已收藏':'收藏'" style="padding:8px 14px;background:transparent;color:${acc};border:1px solid ${acc};border-radius:8px;font-size:13px;cursor:pointer">收藏</button></div></div>`).join('')}
+<div style="height:70px"></div>
+<div class="bot">${['🏠','首页','🔍','搜索','➕','发布','💬','消息','👤','我的'].reduce((a,c,i,arr)=>i%2===0?[...a,{ico:c,label:arr[i+1]}]:a,[]).map((t,i)=>`<div class="ti ${i===0?'on':''}" onclick="document.querySelectorAll('.ti').forEach(e=>e.classList.remove('on'));this.classList.add('on')"><span class="ico">${t.ico}</span>${t.label}</div>`).join('')}</div>
+<script>document.querySelectorAll('.card').forEach(c=>{c.addEventListener('click',function(){this.style.borderColor='${acc}';setTimeout(()=>this.style.borderColor='${br}',300)})})<\/script>
+</body></html>`;
+
+  const desk=`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${a.pageName}</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'PingFang SC',sans-serif;background:${bg};display:flex;min-height:100vh}
+.sidebar{width:220px;background:${card};border-right:1px solid ${br};padding:0;flex-shrink:0;display:flex;flex-direction:column}
+.logo{padding:20px;font-size:17px;font-weight:700;color:${acc};border-bottom:1px solid ${br}}
+.si{padding:11px 20px;font-size:13px;color:${sub};cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
+.si:hover,.si.on{background:rgba(91,127,255,.08);color:${acc}}
+.main{flex:1;overflow:auto;padding:24px}
+.hrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:${card};border-radius:12px;padding:16px;border:1px solid ${br}}
+.kpi-val{font-size:24px;font-weight:700;color:${text};margin-bottom:4px}
+.kpi-label{font-size:12px;color:${sub}}
+.section{background:${card};border-radius:12px;padding:20px;border:1px solid ${br};margin-bottom:14px}
+.tabs{display:flex;gap:2px;margin-bottom:16px;background:${bg};padding:3px;border-radius:8px;width:fit-content}
+.tab{padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;color:${sub};transition:all .15s}
+.tab.on{background:${card};color:${text};font-weight:500;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;font-size:11px;color:${sub};border-bottom:1px solid ${br};font-weight:500}
+td{padding:10px 12px;border-bottom:1px solid ${br};color:${text}}
+tr:last-child td{border:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px}
+.btn-p{padding:8px 16px;background:${acc};color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+</style></head><body>
+<div class="sidebar">
+  <div class="logo">${a.pageName}</div>
+  ${a.features.slice(0,5).map((f,i)=>`<div class="si ${i===0?'on':''}" onclick="document.querySelectorAll('.si').forEach(e=>e.classList.remove('on'));this.classList.add('on')">${['📊','👥','📋','⚙️','🔔'][i]} ${f.replace(/[：:].*/,'').trim()}</div>`).join('')}
+</div>
+<div class="main">
+  <div class="hrow"><div style="font-size:20px;font-weight:700;color:${text}">${a.features[0]?.replace(/[：:].*/,'').trim()||'概览'}</div><button class="btn-p" onclick="alert('操作成功！')">+ 新建</button></div>
+  <div class="kpis">${[['总数据量','12,483','↑8.2%'],['今日新增','324','↑12%'],['处理中','891',''],['完成率','94.2%','↑2.1%']].map(([l,v,c])=>`<div class="kpi"><div class="kpi-val">${v}</div><div class="kpi-label">${l} <span style="font-size:11px;color:${c.startsWith('↑')?'#10b981':'#ef4444'}">${c}</span></div></div>`).join('')}</div>
+  <div class="section">
+    <div class="tabs">${['全部','进行中','已完成','待处理'].map((t,i)=>`<div class="tab ${i===0?'on':''}" onclick="document.querySelectorAll('.tab').forEach(e=>e.classList.remove('on'));this.classList.add('on')">${t}</div>`).join('')}</div>
+    <table><thead><tr><th>名称</th><th>状态</th><th>负责人</th><th>更新时间</th><th>操作</th></tr></thead><tbody>
+    ${[['任务 A','进行中','张三','2024-03-15'],['任务 B','已完成','李四','2024-03-14'],['任务 C','待处理','王五','2024-03-13'],['任务 D','进行中','赵六','2024-03-12']].map(([n,s,p,d])=>`<tr><td style="font-weight:500">${n}</td><td><span class="badge" style="background:${{进行中:'rgba(91,127,255,.1)',已完成:'rgba(16,185,129,.1)',待处理:'rgba(245,158,11,.1)'}[s]};color:${{进行中:'#5b7fff',已完成:'#10b981',待处理:'#f59e0b'}[s]}">${s}</span></td><td>${p}</td><td style="color:${sub}">${d}</td><td><button onclick="alert('查看详情')" style="border:none;background:transparent;color:${acc};cursor:pointer;font-size:12px">查看</button></td></tr>`).join('')}
+    </tbody></table>
+  </div>
+</div>
+</body></html>`;
+
+  return{code:isMobile?mob:desk,isMobile,title:a.pageName+'（演示）'};
+}
+
+function renderCard(result,idx){
+  const{code,isMobile,title}=result;
+  const card=document.createElement('div');
+  card.className='pcard';
+  card.innerHTML=`
+    <div class="pcard-hd">
+      <div class="pcard-label">${isMobile?'📱 手机壳预览':'🖥 浏览器预览'} · <span style="color:var(--text)">${title}</span></div>
+      <div class="pcard-acts">
+        <button class="act" onclick="openFull(${idx})">⛶ 新标签页</button>
+        <button class="act" onclick="dlOne(${idx})">⬇ 下载</button>
+      </div>
+    </div>
+    <div id="pa${idx}"></div>
+    <div class="code-tog" id="ct${idx}" onclick="togCode(${idx})"><span class="arr">▸</span> 查看 HTML 源码</div>
+    <div class="code-box" id="cb${idx}"><pre id="cpre${idx}"></pre></div>`;
+  document.getElementById('pgrid').appendChild(card);
+  document.getElementById('cpre'+idx).textContent=code;
+
+  const pa=document.getElementById('pa'+idx);
+  if(isMobile){
+    pa.className='mobile-wrap';
+    const phone=document.createElement('div');phone.className='phone';
+    const top=document.createElement('div');top.className='phone-top';
+    const notch=document.createElement('div');notch.className='notch';
+    top.appendChild(notch);
+    const iframe=document.createElement('iframe');
+    iframe.sandbox='allow-scripts allow-same-origin';
+    iframe.srcdoc=code;
+    phone.appendChild(top);phone.appendChild(iframe);pa.appendChild(phone);
+  } else {
+    pa.innerHTML=`<div class="browser-bar"><div class="bdots"><div class="bd" style="background:#ef4444"></div><div class="bd" style="background:#f59e0b"></div><div class="bd" style="background:#10b981"></div></div><div class="url-bar">localhost · ${title}</div></div>`;
+    const iframe=document.createElement('iframe');
+    iframe.className='desktop-iframe';
+    iframe.sandbox='allow-scripts allow-same-origin';
+    iframe.srcdoc=code;
+    pa.appendChild(iframe);
+  }
+}
+
+function togCode(i){const cb=document.getElementById('cb'+i);const tog=document.getElementById('ct'+i);const open=cb.style.display==='block';cb.style.display=open?'none':'block';tog.classList.toggle('open',!open)}
+function openFull(i){const r=results[i];if(!r)return;const w=window.open('','_blank');w.document.open();w.document.write(r.code);w.document.close()}
+function dlOne(i){const r=results[i];if(!r)return;const blob=new Blob([r.code],{type:'text/html;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`prototype_${i+1}.html`;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function dlAll(){results.forEach((_,i)=>dlOne(i))}
+
+async function run(){
+  const text=document.getElementById('meetInput').value.trim();
+  if(!text){showErr('请先粘贴会议纪要内容');return}
+  hideErr();busy(true);results=[];
+
+  const devicePref=document.getElementById('device').value;
+  const stylePref=document.getElementById('vstyle').value;
+
+  try{
+    step(1);
+    const analysis=await analyze(text,devicePref);
+    renderAnalysis(analysis);
+
+    const isMobile=analysis.device==='mobile';
+    document.getElementById('outlabel').textContent=`· ${isMobile?'📱 手机壳':'🖥 浏览器框'} · ${protoN} 套方案`;
+    document.getElementById('output').style.display='block';
+    const grid=document.getElementById('pgrid');
+    grid.className='pgrid n'+protoN;
+    grid.innerHTML='';
+
+    for(let i=0;i<protoN;i++){
+      const sk=document.createElement('div');sk.className='pcard';sk.id='sk'+i;
+      sk.innerHTML=`<div class="sk" style="min-height:${isMobile?560:380}px"><div class="ski">🎨</div><div>生成方案 ${i+1}…</div></div>`;
+      grid.appendChild(sk);
+    }
+    document.getElementById('output').scrollIntoView({behavior:'smooth',block:'start'});
+
+    step(2);
+    for(let i=0;i<protoN;i++){
+      stepMsg(2,`生成方案 ${i+1} / ${protoN}，请稍候…`);
+      const result=await genHTML(text,analysis,i,protoN,stylePref);
+      results[i]=result;
+      const sk=document.getElementById('sk'+i);
+      if(sk)sk.remove();
+      renderCard(result,i);
+    }
+    step(3,'ok');
+  }catch(e){showErr(e.message);step(1,'er')}
+  busy(false);
+}
+</script>
+</body>
+</html>
